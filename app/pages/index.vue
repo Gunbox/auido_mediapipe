@@ -4,7 +4,7 @@ import type { TableColumn } from "@nuxt/ui";
 
 type Category = {
   time: number;
-  category: string;
+  category: string[];
   confidence: number;
 };
 
@@ -13,6 +13,8 @@ const resultsLoading = ref(false);
 const resultsData = ref<Category[]>([]);
 const resultsError = ref("");
 const selectedFile = ref<File | null>(null);
+const UBadge = resolveComponent("UBadge");
+
 const columns: TableColumn<Category>[] = [
   {
     accessorKey: "time",
@@ -22,7 +24,7 @@ const columns: TableColumn<Category>[] = [
   {
     accessorKey: "category",
     header: "Category",
-    cell: ({ row }) => row.getValue("category"),
+    cell: ({ row }) => (row.getValue("category") as string[]).join("\n"),
   },
   {
     accessorKey: "confidence",
@@ -92,7 +94,9 @@ function displayClassificationResults(results: any) {
   resultsData.value = results.map((item: any) => {
     return {
       time: item.timestampMs,
-      category: item.classifications[0].categories[0].categoryName,
+      category: item.classifications[0].categories
+        .slice(0, 5)
+        .map((c: any) => c.categoryName),
       confidence: item.classifications[0].categories[0].score.toFixed(2),
     };
   });
@@ -134,6 +138,7 @@ onMounted(() => {
           :loading="resultsLoading"
           :data="resultsData"
           :columns="columns"
+          :ui="{ td: 'whitespace-pre' }"
         />
       </UPageBody>
     </UPage>
